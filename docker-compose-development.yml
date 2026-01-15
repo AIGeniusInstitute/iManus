@@ -34,15 +34,9 @@ services:
     ports:
       - "8000:8000"
     depends_on:
-      sandbox:
-        condition: service_started
-        required: false
-      mongodb:
-        condition: service_started
-        required: true
-      redis:
-        condition: service_started
-        required: true
+      - sandbox
+      - mongodb
+      - redis
     restart: unless-stopped
     networks:
       - manus-network
@@ -73,20 +67,20 @@ services:
     networks:
       - manus-network
 
-  mockserver:
-    build:
-      context: ./mockserver
-      dockerfile: Dockerfile
-    volumes:
-      - ./mockserver:/app  # Mount source code directory
-      - /app/__pycache__  # Avoid overwriting cache files
-      - /app/.venv  # Avoid overwriting virtual environment
-    restart: unless-stopped
-    environment:
-      - MOCK_DATA_FILE=default.yaml
-      - MOCK_DELAY=1
-    networks:
-      - manus-network
+  # mockserver:
+  #   build:
+  #     context: ./mockserver
+  #     dockerfile: Dockerfile
+  #   volumes:
+  #     - ./mockserver:/app  # Mount source code directory
+  #     - /app/__pycache__  # Avoid overwriting cache files
+  #     - /app/.venv  # Avoid overwriting virtual environment
+  #   restart: unless-stopped
+  #   environment:
+  #     - MOCK_DATA_FILE=default.yaml
+  #     - MOCK_DELAY=1
+  #   networks:
+  #     - manus-network
 
   mongodb:
     image: mongo:7.0

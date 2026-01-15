@@ -34,42 +34,43 @@ https://github.com/user-attachments/assets/8f7788a4-fbda-49f5-b836-949a607c64ac
 
 https://github.com/user-attachments/assets/5cb2240b-0984-4db0-8818-a24f81624b04
 
-
 ## 主要特性
 
- * 部署：最小只需要一个 LLM 服务即可完成部署，不需要依赖其它外部服务。
- * 工具：支持 Terminal、Browser、File、Web Search、消息工具，并支持实查看和接管，支持外部 MCP 工具集成。
- * 沙盒：每个 Task 会分配单独的一个沙盒，沙盒在本地 Dock 环境里面运行。
- * 任务会话：通过 Mongo/Redis 对会话历史进行管理，支持后台任务。
- * 对话：支持停止与打断，支持文件上传与下载。
- * 多语言：支持中文与英文。
- * 认证：用户登录与认证。
+* 部署：最小只需要一个 LLM 服务即可完成部署，不需要依赖其它外部服务。
+* 工具：支持 Terminal、Browser、File、Web Search、消息工具，并支持实查看和接管，支持外部 MCP 工具集成。
+* 沙盒：每个 Task 会分配单独的一个沙盒，沙盒在本地 Dock 环境里面运行。
+* 任务会话：通过 Mongo/Redis 对会话历史进行管理，支持后台任务。
+* 对话：支持停止与打断，支持文件上传与下载。
+* 多语言：支持中文与英文。
+* 认证：用户登录与认证。
 
 ## 开发计划
 
- * 工具：支持 Deploy & Expose。
- * 沙盒：支持手机与 Windows 电脑接入。
- * 部署：支持 K8s 和 Dock Swarm 多集群部署。
+* 工具：支持 Deploy & Expose。
+* 沙盒：支持手机与 Windows 电脑接入。
+* 部署：支持 K8s 和 Dock Swarm 多集群部署。
 
 ## 环境要求
 
 本项目主要依赖Docker进行开发与部署，需要安装较新版本的Docker：
+
 - Docker 20.10+
 - Docker Compose
 
 模型能力要求：
+
 - 兼容OpenAI接口
 - 支持FunctionCall
 - 支持Json Format输出
 
 推荐使用Deepseek与GPT模型。
 
-
 ## 部署指南
 
 推荐使用Docker Compose进行部署：
 
 <!-- docker-compose-example.yml -->
+
 ```yaml
 services:
   frontend:
@@ -142,7 +143,7 @@ services:
       #- SANDBOX_HTTP_PROXY=
       # No proxy hosts for sandbox (optional)
       #- SANDBOX_NO_PROXY=
-      
+    
       # Search engine configuration
       # Options: baidu, google, bing
       - SEARCH_PROVIDER=bing
@@ -215,17 +216,18 @@ networks:
     name: manus-network
     driver: bridge
 ```
+
 <!-- /docker-compose-example.yml -->
 
-保存成`docker-compose.yml`文件，并运行
+保存成 `docker-compose.yml`文件，并运行
 
 ```shell
 docker compose up -d
 ```
 
-> 注意：如果提示`sandbox-1 exited with code 0`，这是正常的，这是为了让 sandbox 镜像成功拉取到本地。
+> 注意：如果提示 `sandbox-1 exited with code 0`，这是正常的，这是为了让 sandbox 镜像成功拉取到本地。
 
-打开浏览器访问<http://localhost:5173>即可访问 Manus。
+打开浏览器访问[http://localhost:5173](http://localhost:5173)即可访问 Manus。
 
 ## 开发指南
 
@@ -243,7 +245,7 @@ docker compose up -d
 
 **当用户发起对话时：**
 
-1. Web 向 Server 发送创建 Agent 请求，Server 通过`/var/run/docker.sock`创建出 Sandbox，并返回会话 ID。
+1. Web 向 Server 发送创建 Agent 请求，Server 通过 `/var/run/docker.sock`创建出 Sandbox，并返回会话 ID。
 2. Sandbox 是一个 Ubuntu Docker 环境，里面会启动 chrome 浏览器及 File/Shell 等工具的 API 服务。
 3. Web 往会话 ID 中发送用户消息，Server 收到用户消息后，将消息发送给 PlanAct Agent 处理。
 4. PlanAct Agent 处理过程中会调用相关工具完成任务。
@@ -252,19 +254,21 @@ docker compose up -d
 **当用户浏览工具时：**
 
 - 浏览器：
-    1. Sandbox 的无头浏览器通过 xvfb 与 x11vnc 启动了 vnc 服务，并且通过 websockify 将 vnc 转化成 websocket。
-    2. Web 的 NoVNC 组件通过 Server 的 Websocket Forward 转发到 Sandbox，实现浏览器查看。
+  1. Sandbox 的无头浏览器通过 xvfb 与 x11vnc 启动了 vnc 服务，并且通过 websockify 将 vnc 转化成 websocket。
+  2. Web 的 NoVNC 组件通过 Server 的 Websocket Forward 转发到 Sandbox，实现浏览器查看。
 - 其它工具：其它工具原理也是差不多。
 
 ### 环境准备
 
 1. 下载项目：
+
 ```bash
 git clone https://github.com/simpleyyt/ai-manus.git
 cd ai-manus
 ```
 
 2. 复制配置文件：
+
 ```bash
 cp .env.example .env
 ```
@@ -272,6 +276,7 @@ cp .env.example .env
 3. 修改配置文件：
 
 <!-- .env.example -->
+
 ```env
 # Model provider configuration
 API_KEY=
@@ -345,17 +350,23 @@ JWT_REFRESH_TOKEN_EXPIRE_DAYS=7
 # Log configuration
 LOG_LEVEL=INFO
 ```
+
 <!-- /.env.example -->
 
 ### 开发调试
 
 1. 运行调试：
+
+>  docker compose -f docker-compose-development.yml up
+
 ```bash
-# 相当于 docker compose -f docker-compose-development.yaml up
+# 相当于 
+# docker compose -f docker-compose-development.yml up
 ./dev.sh up
 ```
 
 各服务会以 reload 模式运行，代码改动会自动重新加载。暴露的端口如下：
+
 - 5173: Web前端端口
 - 8000: Server API服务端口
 - 8080: Sandbox API服务端口
@@ -365,6 +376,7 @@ LOG_LEVEL=INFO
 > *注意：在 Debug 模式全局只会启动一个沙盒*
 
 2. 当依赖变化时（requirements.txt或package.json），清理并重新构建：
+
 ```bash
 # 清理所有相关资源
 ./dev.sh down -v
