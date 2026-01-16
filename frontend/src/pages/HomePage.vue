@@ -12,7 +12,7 @@
               </div>
             </div>
             <div class="flex">
-              <Bot :size="30" />
+              <ManusIcon />
               <ManusLogoTextIcon />
             </div>
           </div>
@@ -77,6 +77,7 @@ import { createSession } from '../api/agent';
 import { showErrorToast } from '../utils/toast';
 import { Bot, PanelLeft, Github } from 'lucide-vue-next';
 import ManusLogoTextIcon from '../components/icons/ManusLogoTextIcon.vue';
+import ManusIcon from '../components/icons/ManusIcon.vue';
 import type { FileInfo } from '../api/file';
 import { useLeftPanel } from '../composables/useLeftPanel';
 import { useFilePanel } from '../composables/useFilePanel';

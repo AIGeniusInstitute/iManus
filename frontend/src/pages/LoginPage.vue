@@ -4,7 +4,7 @@
       <div class="w-full h-[60px] mx-auto flex items-center justify-between text-[var(--text-primary)]">
         <a href="/">
           <div class="flex">
-            <Bot :size="30" />
+            <ManusIcon :size="30" />
             <ManusLogoTextIcon />
           </div>
         </a>
@@ -15,7 +15,7 @@
       <div class="w-full max-w-[720px] pt-[24px] mb-[40px] max-sm:pt-[0px]">
         <div class="flex flex-col items-center gap-[20px] relative" style="z-index:1">
           <div class="w-[80px] h-[80px] text-[var(--icon-primary)] max-sm:w-[64px] max-sm:h-[64px]">
-            <Bot :size="80" />
+            <ManusIcon :size="80" />
           </div>
           <h1 class="text-[20px] font-bold text-center text-[var(--text-primary)] max-sm:text-[18px]">
             {{ 
