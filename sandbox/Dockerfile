@@ -54,10 +54,10 @@ RUN mkdir -p /etc/apt/keyrings && \
 # Configure npm to use Aliyun mirror
 RUN npm config set registry https://registry.npmmirror.com
 
-# Install Google Chrome
-RUN add-apt-repository ppa:xtradeb/apps -y && \
+# Install Chromium from Linux Mint mirror (Aliyun) to avoid Snap and PPA issues
+RUN echo "deb [trusted=yes] http://mirrors.aliyun.com/linuxmint-packages/ vanessa main upstream import" > /etc/apt/sources.list.d/linuxmint.list && \
     apt-get update && \
-    apt-get install -y chromium  --no-install-recommends && \
+    apt-get install -y chromium && \
     apt-get clean && \
     rm -rf /var/lib/apt/lists/*
 
