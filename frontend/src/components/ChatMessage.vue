@@ -7,10 +7,17 @@
         </div>
       </div>
     </div>
-    <div class="flex max-w-[90%] relative flex-col gap-2 items-end">
-      <div
-        class="relative flex items-center rounded-[12px] overflow-hidden bg-[var(--fill-white)] dark:bg-[var(--fill-tsp-white-main)] p-3 ltr:rounded-br-none rtl:rounded-bl-none border border-[var(--border-main)] dark:border-0"
-        v-html="renderMarkdown(messageContent.content)">
+    <div class="flex max-w-[90%] relative gap-2 items-start">
+      <button @click="copyUserMarkdown" 
+        class="flex-shrink-0 flex items-center justify-center mt-0.5 w-7 h-7 rounded-[8px] border border-[var(--border-main)] bg-[var(--background-menu-white)] hover:bg-[var(--fill-tsp-white-main)] text-[var(--text-secondary)] transition-colors duration-200 invisible group-hover:visible"
+        :title="userCopySuccess ? 'Copied!' : 'Copy markdown'">
+        <Copy :size="16" />
+      </button>
+      <div class="flex flex-col gap-2 items-end">
+        <div
+          class="relative flex items-center rounded-[12px] overflow-hidden bg-[var(--fill-white)] dark:bg-[var(--fill-tsp-white-main)] p-3 ltr:rounded-br-none rtl:rounded-bl-none border border-[var(--border-main)] dark:border-0"
+          v-html="renderMarkdown(messageContent.content)">
+        </div>
       </div>
     </div>
   </div>
@@ -119,6 +126,7 @@ const attachmentsContent = computed(() => props.message.content as AttachmentsCo
 // Control content expand/collapse state
 const isExpanded = ref(true);
 const copySuccess = ref(false);
+const userCopySuccess = ref(false);
 
 const { relativeTime } = useRelativeTime();
 
@@ -129,7 +137,7 @@ const renderMarkdown = (text: string) => {
   return DOMPurify.sanitize(html);
 };
 
-// Copy markdown text to clipboard
+// Copy markdown text to clipboard (assistant message)
 const copyMarkdown = async () => {
   try {
     const text = messageContent.value.content;
@@ -139,6 +147,22 @@ const copyMarkdown = async () => {
     copySuccess.value = true;
     setTimeout(() => {
       copySuccess.value = false;
+    }, 2000);
+  } catch (error) {
+    console.error('Failed to copy text:', error);
+  }
+};
+
+// Copy user markdown text to clipboard
+const copyUserMarkdown = async () => {
+  try {
+    const text = messageContent.value.content;
+    await navigator.clipboard.writeText(text);
+    
+    // Show success state temporarily
+    userCopySuccess.value = true;
+    setTimeout(() => {
+      userCopySuccess.value = false;
     }, 2000);
   } catch (error) {
     console.error('Failed to copy text:', error);
