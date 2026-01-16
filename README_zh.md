@@ -388,6 +388,28 @@ LOG_LEVEL=INFO
 ./dev.sh up
 ```
 
+toolName: view_files
+            
+status: success
+          
+            
+filePath: /Users/bytedance/ai/iManus/dev.sh
+          
+如果你说的“关闭 docker”是指**停掉本项目的 compose 服务，但不删任何资源（容器/volume/镜像都保留）**，用：
+
+- 停止容器（不删除容器/网络/volume）：`sh ./dev.sh stop`
+
+如果你想**停止并删除容器与网络**，但**保留 volume（不清理数据）**，用：
+
+- `sh ./dev.sh down`  
+  （注意：不要加 `-v`，`-v` 才会删 volumes）
+
+如果你说的“关闭 docker”是指**把 Docker Desktop / Docker daemon 关掉**（这也不会清理资源）：
+
+- macOS 退出 Docker Desktop：`osascript -e 'quit app "Docker"'`
+- Ubuntu 停止 daemon：`sudo systemctl stop docker`
+
+
 ### 镜像发布
 
 ```bash

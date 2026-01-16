@@ -75,6 +75,7 @@
 </template>
 
 <script setup lang="ts">
+import ManusIcon from './icons/ManusIcon.vue';
 import ManusTextIcon from './icons/ManusTextIcon.vue';
 import { Message, MessageContent, AttachmentsContent } from '../types/message';
 import ToolUse from './ToolUse.vue';
