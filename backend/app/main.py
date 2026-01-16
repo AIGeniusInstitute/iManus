@@ -61,7 +61,7 @@ async def lifespan(app: FastAPI):
         except Exception as e:
             logger.error(f"Error during AgentService cleanup: {str(e)}")
 
-app = FastAPI(title="Manus AI Agent", lifespan=lifespan)
+app = FastAPI(title="iManus AI Agent", lifespan=lifespan)
 
 # Configure CORS
 app.add_middleware(

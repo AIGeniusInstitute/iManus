@@ -1,4 +1,4 @@
-# 🤖 AI Manus 开源通用智能体
+# 🤖 iManus 开源通用智能体
 
 项目地址：<https://github.com/Simpleyyt/ai-manus>
 
