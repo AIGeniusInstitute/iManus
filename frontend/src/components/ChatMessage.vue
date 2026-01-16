@@ -30,6 +30,14 @@
     <div
       class="max-w-none p-0 m-0 prose prose-sm sm:prose-base dark:prose-invert [&_pre:not(.shiki)]:!bg-[var(--fill-tsp-white-light)] [&_pre:not(.shiki)]:text-[var(--text-primary)] text-base text-[var(--text-primary)]"
       v-html="renderMarkdown(messageContent.content)"></div>
+    <div class="flex items-center gap-2 mt-2 invisible group-hover:visible">
+      <button @click="copyMarkdown" 
+        class="flex items-center gap-1.5 px-3 py-1.5 rounded-[8px] border border-[var(--border-main)] bg-[var(--background-menu-white)] hover:bg-[var(--fill-tsp-white-main)] text-xs text-[var(--text-secondary)] transition-colors duration-200"
+        :title="copySuccess ? 'Copied!' : 'Copy markdown'">
+        <Copy :size="14" />
+        <span>{{ copySuccess ? 'Copied' : 'Copy' }}</span>
+      </button>
+    </div>
   </div>
   <ToolUse v-else-if="message.type === 'tool'" :tool="toolContent" @click="handleToolClick(toolContent)" />
   <div v-else-if="message.type === 'step'" class="flex flex-col">
@@ -81,7 +89,7 @@ import { Message, MessageContent, AttachmentsContent } from '../types/message';
 import ToolUse from './ToolUse.vue';
 import { marked } from 'marked';
 import DOMPurify from 'dompurify';
-import { CheckIcon } from 'lucide-vue-next';
+import { CheckIcon, Copy } from 'lucide-vue-next';
 import { computed, ref } from 'vue';
 import { ToolContent, StepContent } from '../types/message';
 import { useRelativeTime } from '../composables/useTime';
@@ -110,6 +118,7 @@ const attachmentsContent = computed(() => props.message.content as AttachmentsCo
 
 // Control content expand/collapse state
 const isExpanded = ref(true);
+const copySuccess = ref(false);
 
 const { relativeTime } = useRelativeTime();
 
@@ -118,6 +127,22 @@ const renderMarkdown = (text: string) => {
   if (typeof text !== 'string') return '';
   const html = marked(text) as string;
   return DOMPurify.sanitize(html);
+};
+
+// Copy markdown text to clipboard
+const copyMarkdown = async () => {
+  try {
+    const text = messageContent.value.content;
+    await navigator.clipboard.writeText(text);
+    
+    // Show success state temporarily
+    copySuccess.value = true;
+    setTimeout(() => {
+      copySuccess.value = false;
+    }, 2000);
+  } catch (error) {
+    console.error('Failed to copy text:', error);
+  }
 };
 </script>
 
