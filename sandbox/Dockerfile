@@ -25,6 +25,7 @@ RUN apt-get update && apt-get install -y \
     socat \
     supervisor \
     websockify \
+    dbus \
     && apt-get clean \
     && rm -rf /var/lib/apt/lists/*
 
