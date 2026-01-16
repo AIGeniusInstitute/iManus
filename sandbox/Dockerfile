@@ -54,10 +54,13 @@ RUN mkdir -p /etc/apt/keyrings && \
 # Configure npm to use Aliyun mirror
 RUN npm config set registry https://registry.npmmirror.com
 
-# Install Chromium from Linux Mint mirror (Aliyun) to avoid Snap and PPA issues
-RUN echo "deb [trusted=yes] http://mirrors.aliyun.com/linuxmint-packages/ vanessa main upstream import" > /etc/apt/sources.list.d/linuxmint.list && \
+# Install Chromium from Debian Bullseye mirror (Aliyun) to support ARM64 and avoid Snap
+# Debian Bullseye uses glibc 2.31, which is compatible with Ubuntu 22.04 (glibc 2.35)
+RUN echo "deb [trusted=yes] http://mirrors.aliyun.com/debian/ bullseye main non-free" > /etc/apt/sources.list.d/debian.list && \
+    echo "deb [trusted=yes] http://mirrors.aliyun.com/debian-security/ bullseye-security main" >> /etc/apt/sources.list.d/debian.list && \
     apt-get update && \
     apt-get install -y chromium && \
+    rm -f /etc/apt/sources.list.d/debian.list && \
     apt-get clean && \
     rm -rf /var/lib/apt/lists/*
 
