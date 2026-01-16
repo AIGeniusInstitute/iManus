@@ -21,7 +21,7 @@ class DockerSandbox(Sandbox):
         """Initialize Docker sandbox and API interaction client"""
         self.client = httpx.AsyncClient(timeout=600)
         self.ip = ip
-        self.base_url = f"http://{self.ip}:8080"
+        self.base_url = f"http://{self.ip}:7080"
         self._vnc_url = f"ws://{self.ip}:5901"
         self._cdp_url = f"http://{self.ip}:9222"
         self._container_name = container_name

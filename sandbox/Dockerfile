@@ -95,7 +95,7 @@ COPY . .
 COPY supervisord.conf /etc/supervisor/conf.d/app.conf
 
 # Expose ports
-EXPOSE 8080 9222 5900 5901
+EXPOSE 7080 9222 5900 5901
 
 ENV UVI_ARGS=""
 ENV CHROME_ARGS=""

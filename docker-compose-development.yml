@@ -40,6 +40,8 @@ services:
     restart: unless-stopped
     networks:
       - manus-network
+    extra_hosts:
+      - "host.docker.internal:host-gateway"  # 允许容器访问宿主机服务
     env_file:
       - .env
     environment:
@@ -56,10 +58,10 @@ services:
       - /app/__pycache__  # Avoid overwriting cache files
       - /app/.venv  # Avoid overwriting virtual environment
     ports:
-      #- "9222:9222"
+      - "9222:9222"
       - "5902:5900"
-      #- "5901:5901"
-      - "8080:8080"
+      - "5901:5901"
+      - "7080:7080"
     environment:
       - UVI_ARGS="--reload"
       - LOG_LEVEL=${LOG_LEVEL:-DEBUG}
