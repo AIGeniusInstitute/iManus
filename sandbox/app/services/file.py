@@ -20,7 +20,7 @@ class FileService:
     """File Operation Service"""
 
     async def read_file(self, file: str, start_line: Optional[int] = None, 
-                 end_line: Optional[int] = None, sudo: bool = False, max_length: Optional[int] = 10000) -> FileReadResult:
+                 end_line: Optional[int] = None, sudo: bool = False, max_length: Optional[int] = 70000) -> FileReadResult:
         """
         Asynchronously read file content
         
