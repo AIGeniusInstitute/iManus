@@ -26,6 +26,10 @@ RUN apt-get update && apt-get install -y \
     supervisor \
     websockify \
     dbus \
+    libvulkan1 \
+    libegl1-mesa \
+    libgl1-mesa-dri \
+    mesa-vulkan-drivers \
     && apt-get clean \
     && rm -rf /var/lib/apt/lists/*
 
