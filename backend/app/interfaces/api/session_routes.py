@@ -166,10 +166,16 @@ async def stream_sessions(
                     yield ServerSentEvent(event="sessions", data=payload)
                     last_payload = payload
 
+            except asyncio.CancelledError:
+                # Propagate cancellation so the ASGI server can shut down gracefully
+                raise
             except Exception as e:
                 logger.exception(f"Error while streaming sessions: {e}")
 
-            await asyncio.sleep(SESSION_POLL_INTERVAL)
+            try:
+                await asyncio.sleep(SESSION_POLL_INTERVAL)
+            except asyncio.CancelledError:
+                raise
 
     return EventSourceResponse(event_generator())
 

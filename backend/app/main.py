@@ -17,7 +17,7 @@ from app.infrastructure.models.documents import (
     UserDocument,
 )
 from beanie import init_beanie
-from datetime import timedelta, timezone
+from datetime import datetime, timedelta, timezone
 from app.domain.models.session import SessionStatus
 
 # Initialize logging system
