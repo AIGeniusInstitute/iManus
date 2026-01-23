@@ -76,7 +76,7 @@ class BingSearchEngine(SearchEngine):
                 # Update cookies with response cookies in memory
                 self.cookies.update(response.cookies)
                 
-                logger.info(f"===>Bing search response: \n\n{response.text}\n\n")
+                # logger.info(f"===>Bing search response: \n\n{response.text}\n\n")
                 
                 # Parse HTML content
                 soup = BeautifulSoup(response.text, 'html.parser')
