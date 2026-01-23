@@ -46,6 +46,7 @@ services:
       - .env
     environment:
       - SANDBOX_ADDRESS=sandbox # Use single container as sandbox
+      - LOG_LEVEL=${LOG_LEVEL:-DEBUG}
 
   sandbox:
     build:

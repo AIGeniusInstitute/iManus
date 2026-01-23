@@ -18,7 +18,7 @@ class BingSearchEngine(SearchEngine):
         self.headers = {
             'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/137.0.0.0 Safari/537.36',
             'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8',
-            'Accept-Language': 'en-US,en;q=0.5',
+            'Accept-Language': 'zh-CN,zh;q=0.9,en-US;q=0.8,en;q=0.5',
             'Accept-Encoding': 'gzip, deflate',
             'Connection': 'keep-alive',
             'Upgrade-Insecure-Requests': '1',
@@ -43,8 +43,6 @@ class BingSearchEngine(SearchEngine):
         params = {
             "q": query,
             "rdr": "1",
-            # "count": "20",  # Number of results per page
-            # "first": "1",   # Starting position (1-based)
         }
         
         # Add time range filter
@@ -52,31 +50,33 @@ class BingSearchEngine(SearchEngine):
         # the previously used incorrect URL-encoded strings. If a supported
         # mapping is known, it can be added here. For now we log and ignore
         # unsupported date_range values to avoid malformed queries.
-        if date_range and date_range != "all":
-            date_mapping = {
-                # Placeholder mappings — keep conservative and do not inject
-                # malformed encoded strings. These entries are informational
-                # and currently not appended to the request to avoid errors.
-                "past_hour": None,
-                "past_day": None,
-                "past_week": None,
-                "past_month": None,
-                "past_year": None,
-            }
-            if date_range in date_mapping and date_mapping[date_range] is not None:
-                params.update(date_mapping[date_range])
-            else:
-                logger.debug(f"Date range filter '{date_range}' not applied — unsupported or unsafe to add to params")
+        # if date_range and date_range != "all":
+        #     date_mapping = {
+        #         # Placeholder mappings — keep conservative and do not inject
+        #         # malformed encoded strings. These entries are informational
+        #         # and currently not appended to the request to avoid errors.
+        #         "past_hour": None,
+        #         "past_day": None,
+        #         "past_week": None,
+        #         "past_month": None,
+        #         "past_year": None,
+        #     }
+        #     if date_range in date_mapping and date_mapping[date_range] is not None:
+        #         params.update(date_mapping[date_range])
+        #     else:
+        #         logger.debug(f"Date range filter '{date_range}' not applied — unsupported or unsafe to add to params")
         
         try:
             async with httpx.AsyncClient(headers=self.headers, cookies=self.cookies, timeout=30.0, follow_redirects=True) as client:
                 # Log request for debugging (safe: do not log full query text in prod)
-                logger.debug(f"Bing search request params: {params}")
+                logger.info(f"Bing search request params: {params}")
                 response = await client.get(self.base_url, params=params)
                 response.raise_for_status()
                 
                 # Update cookies with response cookies in memory
                 self.cookies.update(response.cookies)
+                
+                logger.info(f"===>Bing search response: \n\n{response.text}\n\n")
                 
                 # Parse HTML content
                 soup = BeautifulSoup(response.text, 'html.parser')
@@ -96,8 +96,8 @@ class BingSearchEngine(SearchEngine):
                     error_results = SearchResults(query=query, date_range=date_range, total_results=0, results=[])
                     return ToolResult(success=False, message='Bing blocked the request or returned a captcha page', data=error_results)
 
-                # Debug: record status and small snippet of HTML for troubleshooting
-                logger.debug(f"Bing response status: {response.status_code}; content length: {len(response.text)}")
+                # Debug: record status, final URL and small snippet of HTML for troubleshooting
+                logger.info(f"Bing response status: {response.status_code}; url: {response.url}; content length: {len(response.text)}")
                 if logger.isEnabledFor(logging.DEBUG):
                     logger.debug(f"Bing response snippet: {response.text[:2000]}")
                 
