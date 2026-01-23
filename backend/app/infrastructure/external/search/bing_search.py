@@ -2,7 +2,6 @@ from typing import Optional
 import logging
 import httpx
 import re
-from urllib.parse import quote
 from bs4 import BeautifulSoup
 from app.domain.models.tool_result import ToolResult
 from app.domain.models.search import SearchResults, SearchResultItem
@@ -15,7 +14,7 @@ class BingSearchEngine(SearchEngine):
     
     def __init__(self):
         """Initialize Bing search engine"""
-        self.base_url = "https://www.bing.com/search"
+        self.base_url = "https://cn.bing.com/search"
         self.headers = {
             'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/137.0.0.0 Safari/537.36',
             'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8',
@@ -43,25 +42,36 @@ class BingSearchEngine(SearchEngine):
         """
         params = {
             "q": query,
-            "count": "20",  # Number of results per page
-            "first": "1",   # Starting position (1-based)
+            "rdr": "1",
+            # "count": "20",  # Number of results per page
+            # "first": "1",   # Starting position (1-based)
         }
         
         # Add time range filter
+        # NOTE: Bing's query filters are fragile and vary by region. Avoid sending
+        # the previously used incorrect URL-encoded strings. If a supported
+        # mapping is known, it can be added here. For now we log and ignore
+        # unsupported date_range values to avoid malformed queries.
         if date_range and date_range != "all":
-            # Convert date_range to time range parameters supported by Bing
             date_mapping = {
-                "past_hour": "interval%3d%22Hour%22",
-                "past_day": "interval%3d%22Day%22", 
-                "past_week": "interval%3d%22Week%22",
-                "past_month": "interval%3d%22Month%22",
-                "past_year": "interval%3d%22Year%22"
+                # Placeholder mappings — keep conservative and do not inject
+                # malformed encoded strings. These entries are informational
+                # and currently not appended to the request to avoid errors.
+                "past_hour": None,
+                "past_day": None,
+                "past_week": None,
+                "past_month": None,
+                "past_year": None,
             }
-            if date_range in date_mapping:
-                params["filters"] = date_mapping[date_range]
+            if date_range in date_mapping and date_mapping[date_range] is not None:
+                params.update(date_mapping[date_range])
+            else:
+                logger.debug(f"Date range filter '{date_range}' not applied — unsupported or unsafe to add to params")
         
         try:
             async with httpx.AsyncClient(headers=self.headers, cookies=self.cookies, timeout=30.0, follow_redirects=True) as client:
+                # Log request for debugging (safe: do not log full query text in prod)
+                logger.debug(f"Bing search request params: {params}")
                 response = await client.get(self.base_url, params=params)
                 response.raise_for_status()
                 
@@ -70,12 +80,39 @@ class BingSearchEngine(SearchEngine):
                 
                 # Parse HTML content
                 soup = BeautifulSoup(response.text, 'html.parser')
+
+                # Detect potential anti-bot / captcha pages and return a clear error
+                page_text = soup.get_text(separator=" ", strip=True)
+                anti_bot_indicators = [
+                    'unusual traffic',
+                    'detected unusual traffic',
+                    "please verify you're a human",
+                    '验证码',
+                    '检测到异常',
+                    '访问受限',
+                ]
+                if any(indicator.lower() in page_text.lower() for indicator in anti_bot_indicators):
+                    logger.error('Bing returned anti-bot or captcha page; aborting search')
+                    error_results = SearchResults(query=query, date_range=date_range, total_results=0, results=[])
+                    return ToolResult(success=False, message='Bing blocked the request or returned a captcha page', data=error_results)
+
+                # Debug: record status and small snippet of HTML for troubleshooting
+                logger.debug(f"Bing response status: {response.status_code}; content length: {len(response.text)}")
+                if logger.isEnabledFor(logging.DEBUG):
+                    logger.debug(f"Bing response snippet: {response.text[:2000]}")
                 
                 # Extract search results
                 search_results = []
                 
-                # Bing search results are in li elements with class 'b_algo'
+                # Bing search results commonly appear in `li.b_algo`, but DOM
+                # varies. Try several fallbacks to increase robustness.
                 result_items = soup.find_all('li', class_='b_algo')
+                if not result_items:
+                    # try div with b_algo class
+                    result_items = soup.find_all('div', class_=re.compile(r'b_algo'))
+                if not result_items:
+                    # broader fallback: any element whose class contains 'algo' or 'result'
+                    result_items = soup.find_all(lambda tag: tag.get('class') and any(re.search(r'(algo|result|b_algo)', c) for c in tag.get('class')))
                 
                 for item in result_items:
                     try:
@@ -91,12 +128,13 @@ class BingSearchEngine(SearchEngine):
                                 title = title_a.get_text(strip=True)
                                 link = title_a.get('href', '')
                         
-                        # If not found, try other structures
+                        # If not found, try other structures — accept shorter titles
                         if not title:
                             title_links = item.find_all('a')
                             for a in title_links:
                                 text = a.get_text(strip=True)
-                                if len(text) > 10 and not text.startswith('http'):
+                                # Accept reasonable-length text as title
+                                if len(text) > 6:
                                     title = text
                                     link = a.get('href', '')
                                     break
@@ -107,17 +145,17 @@ class BingSearchEngine(SearchEngine):
                         # Extract snippet
                         snippet = ""
                         
-                        # Look for description in p tag with class 'b_lineclamp*' or 'b_descript'
+                        # Look for description in p/div with known classes first
                         snippet_tags = item.find_all(['p', 'div'], class_=re.compile(r'b_lineclamp|b_descript|b_caption'))
                         if snippet_tags:
                             snippet = snippet_tags[0].get_text(strip=True)
-                        
-                        # If not found, look for any p tag with substantial text
+
+                        # If not found, look for any p tag with reasonable text
                         if not snippet:
                             all_p_tags = item.find_all('p')
                             for p in all_p_tags:
                                 text = p.get_text(strip=True)
-                                if len(text) > 20:
+                                if len(text) > 10:
                                     snippet = text
                                     break
                         
@@ -128,7 +166,7 @@ class BingSearchEngine(SearchEngine):
                             sentences = re.split(r'[.!?\n]', all_text)
                             for sentence in sentences:
                                 clean_sentence = sentence.strip()
-                                if len(clean_sentence) > 20 and clean_sentence != title:
+                                if len(clean_sentence) > 10 and clean_sentence != title:
                                     snippet = clean_sentence
                                     break
                         
@@ -149,29 +187,43 @@ class BingSearchEngine(SearchEngine):
                         logger.warning(f"Failed to parse Bing search result: {e}")
                         continue
                 
-                # Extract total results count
+                # Extract total results count (support multiple locales)
                 total_results = 0
-                # Bing shows result count in various places, try to find it
-                result_stats = soup.find_all(string=re.compile(r'\d+[,\d]*\s*results?'))
+                # Common English patterns
+                result_stats = soup.find_all(string=re.compile(r'\d+[,\d]*\s*results?', re.I))
                 if result_stats:
                     for stat in result_stats:
-                        match = re.search(r'([\d,]+)\s*results?', stat)
+                        match = re.search(r'([\d,]+)\s*results?', stat, re.I)
                         if match:
                             try:
                                 total_results = int(match.group(1).replace(',', ''))
                                 break
                             except ValueError:
                                 continue
-                
-                # Also try looking in the search results count area
+
+                # Chinese / other locale patterns (e.g., "约 1,234 条结果", "1,234 条")
                 if total_results == 0:
-                    count_elements = soup.find_all(['span', 'div'], class_=re.compile(r'sb_count|b_focusTextMedium'))
+                    count_strings = soup.find_all(string=re.compile(r'(约\s*)?[\d,，]+\s*(条|条结果|结果)', re.I))
+                    for stat in count_strings:
+                        match = re.search(r'([\d,，]+)', stat)
+                        if match:
+                            num = match.group(1).replace('，', '').replace(',', '')
+                            try:
+                                total_results = int(num)
+                                break
+                            except ValueError:
+                                continue
+
+                # Also try looking in elements with specific count classes
+                if total_results == 0:
+                    count_elements = soup.find_all(['span', 'div'], class_=re.compile(r'sb_count|b_focusTextMedium', re.I))
                     for elem in count_elements:
                         text = elem.get_text()
-                        match = re.search(r'([\d,]+)\s*results?', text)
+                        match = re.search(r'([\d,，]+)', text)
                         if match:
+                            num = match.group(1).replace('，', '').replace(',', '')
                             try:
-                                total_results = int(match.group(1).replace(',', ''))
+                                total_results = int(num)
                                 break
                             except ValueError:
                                 continue
@@ -183,6 +235,9 @@ class BingSearchEngine(SearchEngine):
                     total_results=total_results,
                     results=search_results
                 )
+                
+                logger.info(f"===>Bing Search completed: found {len(search_results)} results for query '{query}'")
+                logger.info(f"===>Search Results: {results.json()}")
                 
                 return ToolResult(success=True, data=results)
                 

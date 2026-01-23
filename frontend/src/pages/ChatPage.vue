@@ -263,8 +263,21 @@ const handleMessageEvent = (messageData: MessageEventData) => {
 // Handle tool event
 const handleToolEvent = (toolData: ToolEventData) => {
   const lastStep = getLastStep();
+  // Defensive: some backend events may include `content` as a JSON string.
+  // Parse it to an object so views (like SearchToolView) receive structured data.
+  let parsedContent: any = toolData.content;
+  if (parsedContent && typeof parsedContent === 'string') {
+    try {
+      parsedContent = JSON.parse(parsedContent);
+    } catch (e) {
+      // keep original string if parsing fails
+      console.warn('Failed to parse tool event content JSON:', e);
+    }
+  }
+
   let toolContent: ToolContent = {
-    ...toolData
+    ...toolData,
+    content: parsedContent,
   }
   if (lastTool.value && lastTool.value.tool_call_id === toolContent.tool_call_id) {
     Object.assign(lastTool.value, toolContent);
