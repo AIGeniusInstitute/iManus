@@ -30,7 +30,7 @@ class BaiduSearchEngine(SearchEngine):
         """Search web pages using Baidu web search
         
         Args:
-            query: Search query, using 3-5 keywords
+            query: Search query, using 1-3 keywords
             date_range: (Optional) Time range filter for search results
             
         Returns:

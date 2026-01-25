@@ -13,7 +13,7 @@ class SearchEngine(Protocol):
         """Search webpages using search engine
         
         Args:
-            query: Search query, Google search style, using 3-5 keywords
+            query: Search query, Google search style, using 1-3 keywords
             date_range: (Optional) Time range filter for search results
             
         Returns:

@@ -43,16 +43,12 @@ class BingSearchEngine(SearchEngine):
         """Search web pages using Bing web search (optimized for Chinese)
 
         Args:
-            query: Search query, using 3-5 keywords (support Chinese with space separator)
+            query: Search query, using 1-3 keywords (support Chinese with space separator)
             date_range: (Optional) Time range filter for search results
 
         Returns:
             Search results
         """
-        # BUGFIX 修复核心:
-        # 移除了 quote(query)，直接使用原始 query。
-        # httpx 会自动处理 UTF-8 编码和 URL 特殊字符转义。
-        # 如果手动 quote 会导致双重编码 (如 %E5 -> %25E5)，导致 Bing 收到乱码搜索词。
 
         params = {
             "q": query,  # 直接传入原始字符串，httpx 会负责编码
