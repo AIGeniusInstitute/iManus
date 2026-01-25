@@ -23,7 +23,7 @@ class SearchTool(BaseTool):
         parameters={
             "query": {
                 "type": "string",
-                "description": "Search query in Google search style, using 3-5 keywords."
+                "description": "Search query, using 1-2 keywords."
             },
             "date_range": {
                 "type": "string",
