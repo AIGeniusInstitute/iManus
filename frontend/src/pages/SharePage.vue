@@ -47,7 +47,7 @@
             <div class="flex items-center gap-0.5 w-full sm:flex-1">
               <div class="w-6 h-6"><ManusIcon :size="24" /></div>
               <div>
-                <p class="text-sm text-[var(--text-primary)]">{{ replayCompleted ? 'Manus 任务回放完成。' : 'Manus 正在回放任务...' }}</p>
+                <p class="text-sm text-[var(--text-primary)]">{{ replayCompleted ? 'iManus 任务回放完成。' : 'iManus 正在回放任务...' }}</p>
               </div>
             </div>
             <div class="flex items-center flex-row gap-[8px] max-sm:w-full">
@@ -79,7 +79,7 @@
           </svg>
         </button>
         <div class="text-center text-[var(--text-primary)] whitespace-pre-line"
-          v-html="$t('You are viewing a completed Manus task. Replay will start automatically in {countdown} seconds.', { countdown: `<strong>${countdown}</strong>` })">
+          v-html="$t('You are viewing a completed iManus task. Replay will start automatically in {countdown} seconds.', { countdown: `<strong>${countdown}</strong>` })">
         </div>
       </div>
     </div>

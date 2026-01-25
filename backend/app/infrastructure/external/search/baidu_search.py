@@ -37,9 +37,7 @@ class BaiduSearchEngine(SearchEngine):
             Search results
         """
         params = {
-            "wd": query,
-            #"pn": "0",  # Page number (0 for first page)
-            #"rn": "10",  # Number of results per page
+            "wd": query
         }
         
         # Add time range filter

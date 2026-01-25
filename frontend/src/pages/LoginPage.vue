@@ -20,8 +20,8 @@
           <h1 class="text-[20px] font-bold text-center text-[var(--text-primary)] max-sm:text-[18px]">
             {{ 
               isResettingPassword ? t('Reset Password') 
-              : isRegistering ? t('Register to Manus') 
-              : t('Login to Manus') 
+              : isRegistering ? t('Register to iManus') 
+              : t('Login to iManus') 
             }}
           </h1>
         </div>

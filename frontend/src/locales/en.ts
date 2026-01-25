@@ -23,11 +23,11 @@ export default {
   'Thursday': 'Thu',
   'Friday': 'Fri',
   'Saturday': 'Sat',
-  'Manus Computer': 'Manus Computer',
-  'Manus is using': 'Manus is using',
+  'iManus Computer': 'iManus Computer',
+  'iManus is using': 'iManus is using',
   'Jump to live': 'Jump to live',
   'Failed to load file content': 'Failed to load file content',
-  'Give Manus a task to work on...': 'Give Manus a task to work on...',
+  'Give iManus a task to work on...': 'Give iManus a task to work on...',
   // Shell tools
   'Executing command': 'Executing command',
   'Viewing command output': 'Viewing command output',
@@ -99,8 +99,8 @@ export default {
   'Audio': 'Audio',
   'Archive': 'Archive',
   // Login/Register Page
-  'Login to Manus': 'Login to Manus',
-  'Register to Manus': 'Register to Manus',
+  'Login to iManus': 'Login to iManus',
+  'Register to iManus': 'Register to iManus',
   'Full Name': 'Full Name',
   'Email': 'Email',
   'Password': 'Password',
@@ -114,7 +114,7 @@ export default {
   'Already have an account?': 'Already have an account?',
   'Don\'t have an account?': 'Don\'t have an account?',
   'Login successful! Welcome back': 'Login successful! Welcome back',
-  'Registration successful! Welcome to Manus': 'Registration successful! Welcome to Manus',
+  'Registration successful! Welcome to iManus': 'Registration successful! Welcome to iManus',
   'Authentication failed, please try again': 'Authentication failed, please try again',
   'Passwords do not match': 'Passwords do not match',
   // Validation error messages
@@ -200,5 +200,5 @@ export default {
   'Link Copied': 'Link Copied',
   'Link copied to clipboard': 'Link copied to clipboard',
   'Failed to copy link': 'Failed to copy link',
-  'You are viewing a completed Manus task. Replay will start automatically in {countdown} seconds.': 'You are viewing a completed Manus task. Replay will start automatically in {countdown} seconds.',
+  'You are viewing a completed iManus task. Replay will start automatically in {countdown} seconds.': 'You are viewing a completed iManus task. Replay will start automatically in {countdown} seconds.',
 } 

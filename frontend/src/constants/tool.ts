@@ -29,6 +29,7 @@ export const TOOL_FUNCTION_MAP: {[key: string]: string} = {
   "browser_scroll_down": "Scrolling down",
   "browser_console_exec": "Executing JS code",
   "browser_console_view": "Viewing console output",
+  "browser_wait": "Waiting for browser action",
   
   // Search tools
   "info_search_web": "Searching web",

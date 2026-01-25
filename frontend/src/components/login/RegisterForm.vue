@@ -261,7 +261,7 @@ const handleSubmit = async () => {
     })
     
     // Registration success message
-    showSuccessToast(t('Registration successful! Welcome to Manus'))
+    showSuccessToast(t('Registration successful! Welcome to iManus'))
     
     // Emit success event
     emits('success')

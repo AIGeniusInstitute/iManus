@@ -23,11 +23,11 @@ export default {
   'Thursday': '周四',
   'Friday': '周五',
   'Saturday': '周六',
-  'Manus Computer': 'Manus 的电脑',
-  'Manus is using': 'Manus 正在使用',
+  'iManus Computer': 'iManus 的电脑',
+  'iManus is using': 'iManus 正在使用',
   'Jump to live': '跳到实时',
   'Failed to load file content': '加载文件内容失败',
-  'Give Manus a task to work on...': '给 Manus 一个任务...',
+  'Give iManus a task to work on...': '给 iManus 一个任务...',
   // Shell tools
   'Executing command': '正在执行命令',
   'Viewing command output': '正在查看命令输出',
@@ -55,6 +55,7 @@ export default {
   'Viewing console output': '正在查看控制台输出',
   // Search tools
   'Searching web': '正在搜索网络',
+  "Waiting for browser action": "正在等待浏览器操作",
   // Message tools
   'Sending notification': '正在发送通知',
   'Asking question': '正在提问',
@@ -99,8 +100,8 @@ export default {
   'Audio': '音频',
   'Archive': '压缩包',
   // Login/Register Page
-  'Login to Manus': '登录 Manus',
-  'Register to Manus': '注册 Manus',
+  'Login to iManus': '登录 iManus',
+  'Register to iManus': '注册 iManus',
   'Full Name': '姓名',
   'Email': '邮箱',
   'Password': '密码',
@@ -114,7 +115,7 @@ export default {
   'Already have an account?': '已有账户？',
   'Don\'t have an account?': '没有账户？',
   'Login successful! Welcome back': '登录成功！欢迎回来',
-  'Registration successful! Welcome to Manus': '注册成功！欢迎使用 Manus',
+  'Registration successful! Welcome to iManus': '注册成功！欢迎使用 iManus',
   'Authentication failed, please try again': '认证失败，请重试',
   'Passwords do not match': '两次密码输入不一致',
   // Validation error messages
@@ -200,5 +201,5 @@ export default {
   'Link Copied': '链接已复制',
   'Link copied to clipboard': '链接已复制到剪贴板',
   'Failed to copy link': '复制链接失败',
-  'You are viewing a completed Manus task. Replay will start automatically in {countdown} seconds.': '您正在查看一个已完成的 Manus 任务。回放将在 {countdown} 秒后自动开始。',
+  'You are viewing a completed iManus task. Replay will start automatically in {countdown} seconds.': '您正在查看一个已完成的 iManus 任务。回放将在 {countdown} 秒后自动开始。',
 } 
