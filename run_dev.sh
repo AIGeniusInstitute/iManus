@@ -1,2 +1,3 @@
 #!/bin/bash
-sh ./dev.sh up
+sh dev.sh down
+sh dev.sh up
