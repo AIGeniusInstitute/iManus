@@ -11,51 +11,54 @@ import logging
 logger = logging.getLogger(__name__)
 
 class PlaywrightBrowser:
-    """Playwright client that provides specific implementation of browser operations"""
-    
+    """Playwright client that provides specific implementation of browser operations
+
+    Important: when connecting to an external browser via CDP we MUST NOT close the
+    global browser instance because multiple sessions share it. Instead every
+    PlaywrightBrowser instance will create a dedicated BrowserContext and Page to
+    ensure isolation between sessions.
+    """
+
     def __init__(self, cdp_url: str):
         self.browser: Optional[Browser] = None
+        self.context = None
         self.page: Optional[Page] = None
         self.playwright = None
         self.llm = OpenAILLM()
         self.settings = get_settings()
         self.cdp_url = cdp_url
+        # Flag indicating we connected over remote CDP (shared browser)
+        self._connected_over_cdp = False
         
     async def initialize(self):
-        """Initialize and ensure resources are available"""
+        """Initialize and ensure resources are available
+
+        This will connect to the remote browser and create a fresh BrowserContext
+        and Page for this PlaywrightBrowser instance, ensuring per-session isolation.
+        """
         # Add retry logic
         max_retries = 5
         retry_delay = 1  # Initial wait 1 second
         for attempt in range(max_retries):
             try:
+                # Start Playwright runtime (needed for CDP connection)
                 self.playwright = await async_playwright().start()
-                # Connect to existing Chrome instance
+                # Connect to existing Chrome instance via CDP
                 self.browser = await self.playwright.chromium.connect_over_cdp(self.cdp_url)
-                # Get all contexts
-                contexts = self.browser.contexts
-                if contexts and len(contexts[0].pages) == 1:
-                    # Check if it's the initial page (by URL)
-                    page = contexts[0].pages[0]
-                    page_url = await page.evaluate("window.location.href")
-                    if (
-                        page_url == "about:blank" or 
-                        page_url == "chrome://newtab/" or 
-                        page_url == "chrome://new-tab-page/" or 
-                        not page_url
-                    ):
-                        # Only use it when it's the initial page and only one tab
-                        self.page = page
-                    else:
-                        # Not the initial page, create a new page
-                        self.page = await contexts[0].new_page()
-                else:
-                    # Create a new page in other cases
-                    context = contexts[0] if contexts else await self.browser.new_context()
-                    self.page = await context.new_page()
+                self._connected_over_cdp = True
+
+                # Always create a dedicated BrowserContext for isolation
+                # (do NOT reuse browser.contexts[0])
+                self.context = await self.browser.new_context()
+                self.page = await self.context.new_page()
+
                 return True
             except Exception as e:
-                # Clean up failed resources
-                await self.cleanup()
+                # Clean up failed resources (only the context/page we may have created)
+                try:
+                    await self.cleanup()
+                except Exception:
+                    pass
                 
                 # Return error if maximum retry count is reached
                 if attempt == max_retries - 1:
@@ -68,41 +71,49 @@ class PlaywrightBrowser:
                 await asyncio.sleep(retry_delay)
 
     async def cleanup(self):
-        """Clean up Playwright resources, first close all tabs, then close the browser"""
+        """Clean up Playwright resources
+
+        Only the per-instance BrowserContext and Page are closed. When connected
+        over CDP to a shared browser, we must NOT close the global browser or stop
+        the Playwright runtime because other sessions depend on it.
+        """
         try:
-            # If browser exists, first close all tabs
-            if self.browser:
-                # Get all contexts
-                contexts = self.browser.contexts
-                if contexts:
-                    for context in contexts:
-                        # Get all pages in the context
-                        pages = context.pages
-                        # Close all pages
-                        for page in pages:
-                            # Avoid closing self.page multiple times
-                            if page != self.page or (self.page and not self.page.is_closed()):
-                                await page.close()
-            
-            # Ensure the current page is closed (if it exists and is not closed)
-            if self.page and not self.page.is_closed():
-                await self.page.close()
-                
-            # Close the browser
-            if self.browser:
-                await self.browser.close()
-                
-            # Stop playwright
-            if self.playwright:
-                await self.playwright.stop()
-                
+            # Close our dedicated page and context
+            if getattr(self, 'page', None) and not self.page.is_closed():
+                try:
+                    await self.page.close()
+                except Exception:
+                    logger.debug("Failed to close page, ignoring")
+            if getattr(self, 'context', None):
+                try:
+                    await self.context.close()
+                except Exception:
+                    logger.debug("Failed to close context, ignoring")
+
+            # If we did NOT connect over CDP (rare), we may own the browser and playwright
+            # In that case, try to close them as well. But if connected over CDP, leave the
+            # browser/process running.
+            if not getattr(self, '_connected_over_cdp', False):
+                try:
+                    if self.browser:
+                        await self.browser.close()
+                except Exception:
+                    logger.debug("Failed to close browser, ignoring")
+                try:
+                    if self.playwright:
+                        await self.playwright.stop()
+                except Exception:
+                    logger.debug("Failed to stop playwright, ignoring")
         except Exception as e:
             logger.error(f"Error occurred when cleaning up resources: {e}")
         finally:
             # Reset references
             self.page = None
-            self.browser = None
-            self.playwright = None
+            self.context = None
+            # Do NOT reset browser if connected over CDP; keep connection intact
+            if not getattr(self, '_connected_over_cdp', False):
+                self.browser = None
+                self.playwright = None
     
     async def _ensure_browser(self):
         """Ensure the browser is started"""
@@ -111,26 +122,15 @@ class PlaywrightBrowser:
                 raise Exception("Unable to initialize browser resources")
     
     async def _ensure_page(self):
-        """Ensure the page is created and update to the current active tab (rightmost tab)"""
+        """Ensure the page is created and valid for this instance"""
         await self._ensure_browser()
-        if not self.page:
-            self.page = await self.browser.new_page()
-        else:
-            # Get all contexts
-            contexts = self.browser.contexts
-            if contexts:
-                # Get all pages in the current context
-                current_context = contexts[0]
-                pages = current_context.pages
-                
-                if pages:
-                    # Get the rightmost tab (usually the most recently opened page)
-                    rightmost_page = pages[-1]
-                    
-                    # Update if the current page is not the rightmost tab
-                    if self.page != rightmost_page:
-                        # Update to the rightmost tab
-                        self.page = rightmost_page
+        # If we don't have a dedicated context, create one
+        if not getattr(self, 'context', None):
+            self.context = await self.browser.new_context()
+        # If we don't have a page or it's closed, create a new page in our context
+        if not self.page or (self.page and getattr(self.page, 'is_closed', lambda: False)()):
+            self.page = await self.context.new_page()
+        return self.page
     
     async def wait_for_page_load(self, timeout: int = 15) -> bool:
         """Wait for the page to finish loading, waiting up to the specified timeout

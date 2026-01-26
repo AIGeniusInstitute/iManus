@@ -72,6 +72,17 @@ class AgentDomainService:
         if not browser:
             logger.error(f"Failed to get browser for Sandbox {sandbox_id}")
             raise RuntimeError(f"Failed to get browser for Sandbox {sandbox_id}")
+
+        # Ensure this browser instance creates an isolated context/page for this session
+        try:
+            if hasattr(browser, 'initialize'):
+                ok = await browser.initialize()
+                if not ok:
+                    logger.error(f"Browser failed to initialize for Sandbox {sandbox_id}")
+                    raise RuntimeError("Failed to initialize browser for session")
+        except Exception as e:
+            logger.exception(f"Browser initialization error for session {session.id}: {e}")
+            raise
         
         await self._session_repository.save(session)
 

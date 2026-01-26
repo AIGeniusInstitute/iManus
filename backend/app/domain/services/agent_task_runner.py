@@ -275,6 +275,15 @@ class AgentTaskRunner(TaskRunner):
         """Destroy the task and release resources"""
         logger.info(f"Starting to destroy agent task")
         
+        # Cleanup browser contexts/pages for this task (if present)
+        if self._browser:
+            try:
+                logger.debug(f"Cleaning up browser resources for Agent {self._agent_id}")
+                if hasattr(self._browser, 'cleanup'):
+                    await self._browser.cleanup()
+            except Exception as e:
+                logger.exception(f"Error cleaning up browser for Agent {self._agent_id}: {e}")
+        
         # Destroy sandbox environment
         if self._sandbox:
             logger.debug(f"Destroying Agent {self._agent_id}'s sandbox environment")
