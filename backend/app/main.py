@@ -54,10 +54,10 @@ async def lifespan(app: FastAPI):
         """Background task: mark stale RUNNING sessions as COMPLETED
 
         A session is considered stale when its `latest_message_at` (or `updated_at`) is
-        older than `session_stale_seconds` (default 300s). This prevents sessions from
+        older than `session_stale_seconds` (default 60*60*24s). This prevents sessions from
         remaining in RUNNING state indefinitely.
         """
-        session_stale_seconds = getattr(settings, "session_stale_seconds", 300)
+        session_stale_seconds = getattr(settings, "session_stale_seconds", 60*60*24)
         while True:
             try:
                 cutoff = datetime.now(timezone.utc) - timedelta(
