@@ -23,7 +23,7 @@ class SearchTool(BaseTool):
         parameters={
             "query": {
                 "type": "string",
-                "description": "Search query translated in English, using 1-3 keywords."
+                "description": "Search query, using 1-3 keywords."
             },
             "date_range": {
                 "type": "string",
@@ -41,7 +41,7 @@ class SearchTool(BaseTool):
         """Search webpages using search engine
         
         Args:
-            query: Search query, Google search style, using 1-3 keywords
+            query: Search query, using 1-3 keywords
             date_range: (Optional) Time range filter for search results
             
         Returns:

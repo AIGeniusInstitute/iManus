@@ -22,7 +22,9 @@ class BingSearchEngine(SearchEngine):
         """Initialize Bing search engine with Chinese settings"""
         self.base_url = "https://www.bing.com/search"
         self.headers = {
-            'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/137.0.0.0 Safari/537.36',
+            # 'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/137.0.0.0 Safari/537.36',
+            'User-Agent': 'Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/143.0.0.0 Safari/537.36',
+            
             'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8',
             'Accept-Language': 'zh-CN,zh;q=0.9,en-US;q=0.8,en;q=0.5',
             'Accept-Encoding': 'gzip, deflate',
@@ -30,8 +32,10 @@ class BingSearchEngine(SearchEngine):
             'Upgrade-Insecure-Requests': '1',
             # 增强中文语境标识
             'Referer': 'https://www.bing.com/',
-            'DNT': '1'
+            'DNT': '1',
+            "Cookie": "MUID=1FEFFAC1218D606613B4E86E258D6609; MUIDB=1FEFFAC1218D606613B4E86E258D6609; SRCHD=AF=CHROMN; SRCHUID=V=2&GUID=2F3595FAE88E440599D6689FF0ECE3D1&dmnchg=1; _Rwho=u=d&ts=2026-01-23; _FP=hta=on; _UR=QS=0&TQS=0&Pn=0; BFBUSR=BFBHP=0; BFPRResults=FirstPageUrls=DEA1E832374B86232FB7C40343F01C2C%2CEF905FAA8FBD8FB13A8BB9950FE3B583%2C790117C36F5F5C884BA0CF0B62A8A6A8%2C1E0E1B75C7D962CE4A0D21C83ADD66CD%2C41B90746D8C64D5158E18F82F50FB6A9%2CD136822584726EFF8E29B5829E89C729%2C3873E9956AC618D38415AEEC29F2B748%2C39621F5FB96DDFB0E0B6806D79C959C7%2C0E3356509729D58E327E1FCAE4251FC1%2C5D28199CB763A1AB830C82C1E721607F&FPIG=7EC6E997E658457A8E4EFBBF65E83DC2; MMCASM=ID=6AA5C31AA98A4003AE28BDCC8C023BF0; _U=1-2V_JzakDtqSztKgLEECO1R9XHMEhoueEqgelpBoUxyrFTLpFIIK9obxBl-i04TqP-60evkhkvf60JI8h5kEreizgaAgBacwj1H6XWw-VHAsQWIHiD2Y9sJvJSDbbwQdYYRXPA7nHVy13EH0JYAqKSSMUAKS2c27QPNbpyDUsEz5l1Rr2AKt9u-PHZhLvfSEbHpp7ZmqaB56aJ3QofaFxM9jtloFbu2S4bHU9H2eisI; ANON=A=2603708484E3666768D4DC41FFFFFFFF; WLS=C=abb4c32f1ce99e87&N=guangjian; SRCHUSR=DOB=20260123&DS=1&POEX=W; _EDGE_S=ui=zh-cn&SID=375BDA801D906A443A5FCC6C1CD36BDB; ENSEARCH=BENVER=0; _SS=PC=U316&SID=2CACFEE2B1B66C020D7EE808B0FC6DCE&R=432&RB=432&GB=0&RG=0&RP=432; ipv6=hit=1769377950331&t=4; SNRHOP=I=&TS=; _HPVN=CS=eyJQbiI6eyJDbiI6MywiU3QiOjAsIlFzIjowLCJQcm9kIjoiUCJ9LCJTYyI6eyJDbiI6MywiU3QiOjAsIlFzIjowLCJQcm9kIjoiSCJ9LCJReiI6eyJDbiI6MywiU3QiOjAsIlFzIjowLCJQcm9kIjoiVCJ9LCJBcCI6dHJ1ZSwiTXV0ZSI6dHJ1ZSwiTGFkIjoiMjAyNi0wMS0yNVQwMDowMDowMFoiLCJJb3RkIjowLCJHd2IiOjAsIlRucyI6MCwiRGZ0IjpudWxsLCJNdnMiOjAsIkZsdCI6MCwiSW1wIjoxMDgsIlRvYm4iOjB9; USRLOC=HS=1&ELOC=LAT=30.23801040649414|LON=119.92857360839844|N=%E4%BD%99%E6%9D%AD%E5%8C%BA%EF%BC%8C%E6%B5%99%E6%B1%9F%E7%9C%81|ELT=6|; _C_ETH=1; _RwBf=r=0&ilt=79&ihpd=2&ispd=34&rc=432&rb=432&rg=0&pc=432&mtu=0&rbb=0.0&clo=0&v=68&l=2026-01-25T08:00:00.0000000Z&lft=0001-01-01T00:00:00.0000000&aof=0&ard=0001-01-01T00:00:00.0000000&rwdbt=1683274769&rwflt=1683274288&rwaul2=0&g=newLevel1&o=0&p=bingcopilotwaitlist&c=MY00IA&t=2102&s=2023-02-12T13:07:18.3502621+00:00&ts=2026-01-25T20:54:54.2530659+00:00&rwred=0&wls=0&wlb=0&wle=1&ccp=2&cpt=0&lka=0&lkt=0&aad=0&TH=&cid=0&gb=2025w20_c&mta=0&e=vmMRZeYHvkXLbGV2i6YakK3tqRW-UQY-2Ojm-eR6fAa3wlPK-QrQOkC7GQVyK_FV5lmb4fjGXvOuyW6o1fxzMSVpjTuTIEMu0dXYlQ1DOnA; dsc=order=BingPages; SRCHHPGUSR=SRCHLANG=zh-Hans&BZA=0&PREFCOL=0&BRW=N&BRH=T&CW=1185&CH=1292&SCW=1170&SCH=3358&DPR=1.0&UTC=480&B=0&HV=1769374496&HVE=CfDJ8HAK7eZCYw5BifHFeUHnkJFJevRMUHRpgd1-jy5mkCDTmPyYlBzOtcXIjbUv0X8ScuoQJvUwUl-Kria0wOUeqyDSF14NrY74pPaTiLBhYlieaLVLrTRLazwz6_5XXIuAtpIWvlFRePnIAmEhgzrJMGQsLnck2d7WHRbbHw7PX3Ls8Qbu7gSWA7BIE4jt88jCJA&PRVCW=1185&PRVCH=1292&IG=CE7D0BEA21DC4D3299626E841E7EE4AA&EXLTT=13"
         }
+        
         # Initialize cookies to maintain session state
         self.cookies = httpx.Cookies()
 
@@ -50,13 +54,14 @@ class BingSearchEngine(SearchEngine):
             Search results
         """
 
+        # Prepare query parameters
+        
+        # query 中的空格替换为加号，符合Bing搜索习惯
+        query = query.replace(' ', '+')
+         
         params = {
             "q": query,  # 直接传入原始字符串，httpx 会负责编码
-            "count": "20",  # Number of results per page
-            "first": "1",  # Starting position (1-based)
-            "mkt": "zh-CN",  # 关键：指定中文（中国）市场
-            "setlang": "zh-CN",  # 关键：指定搜索语言为中文
-            "form": "QBRE",  # 模拟Bing常规搜索表单类型
+            "FORM": "QBLH",  # 模拟Bing常规搜索表单类型
         }
 
         # Add time range filter
