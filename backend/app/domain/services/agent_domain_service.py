@@ -62,8 +62,11 @@ class AgentDomainService:
         if sandbox_id:
             sandbox = await self._sandbox_cls.get(sandbox_id)
         if not sandbox:
-            sandbox = await self._sandbox_cls.create()
+            # Create sandbox for this specific logical session id so we can provide per-session isolation
+            sandbox = await self._sandbox_cls.create(logical_session_id=session.id)
             session.sandbox_id = sandbox.id
+            # Save session-level VNC URL (per-session websocket URL) for quick retrieval
+            session.sandbox_vnc_url = getattr(sandbox, "_vnc_url", None)
             await self._session_repository.save(session)
         browser = await sandbox.get_browser()
         if not browser:

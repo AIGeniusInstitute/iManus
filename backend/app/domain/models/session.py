@@ -33,6 +33,8 @@ class Session(BaseModel):
     files: List[FileInfo] = []
     status: SessionStatus = SessionStatus.PENDING
     is_shared: bool = False  # Whether this session is shared publicly
+    # URL to the session-specific VNC WebSocket (ws://host:port)
+    sandbox_vnc_url: Optional[str] = None
 
     def get_last_plan(self) -> Optional[Plan]:
         """Get the last plan from the events"""

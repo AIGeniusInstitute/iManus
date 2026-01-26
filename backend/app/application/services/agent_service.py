@@ -124,6 +124,15 @@ class AgentService:
             logger.error(f"Session {session_id} not found for user {user_id}")
             raise RuntimeError("Session not found")
         
+        # If sandbox resources exist for this session, destroy them
+        if session.sandbox_id:
+            try:
+                sandbox = await self._sandbox_cls.get(session.sandbox_id)
+                if sandbox:
+                    await sandbox.destroy()
+            except Exception as e:
+                logger.warning(f"Failed to destroy sandbox for session {session_id}: {e}")
+
         await self._session_repository.delete(session_id)
         logger.info(f"Session {session_id} deleted successfully")
 
@@ -183,12 +192,28 @@ class AgentService:
         
         if not session.sandbox_id:
             raise RuntimeError("Session has no sandbox environment")
-        
-        # Get sandbox and return VNC URL
+
+        # If VNC URL was recorded on session creation, prefer it (per-session isolated VNC)
+        if getattr(session, "sandbox_vnc_url", None):
+            return session.sandbox_vnc_url
+
+        # If no VNC URL yet, attempt to create sandbox resources for this session now
+        # (this will set session.sandbox_id and session.sandbox_vnc_url)
+        try:
+            # _create_task will create sandbox and set session fields
+            await self._agent_domain_service._create_task(session)
+            # Reload session from repository to get persisted fields
+            session = await self._session_repository.find_by_id(session_id)
+            if session and getattr(session, "sandbox_vnc_url", None):
+                return session.sandbox_vnc_url
+        except Exception as e:
+            logger.warning(f"Failed to create per-session VNC resources on demand: {e}")
+
+        # Fallback: Get sandbox and return default VNC URL
         sandbox = await self._sandbox_cls.get(session.sandbox_id)
         if not sandbox:
             raise RuntimeError("Sandbox environment not found")
-        
+
         return sandbox.vnc_url
 
     async def file_view(self, session_id: str, file_path: str, user_id: str) -> FileViewResponse:

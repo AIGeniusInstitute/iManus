@@ -506,10 +506,33 @@ class DockerSandbox(Sandbox):
             return None
 
     async def destroy(self) -> bool:
-        """Destroy Docker sandbox"""
+        """Destroy Docker sandbox
+
+        For per-session shared sandbox sessions, also clean up started processes (x11vnc/websockify/Xvfb)
+        and remove the session directory.
+        """
         try:
+            # If we created session-specific processes in shared-container mode, kill them
+            if getattr(self, "_sandbox_session_id", None):
+                session_id = self._sandbox_session_id
+                try:
+                    # Kill recorded pids
+                    for pid in getattr(self, "_vnc_pids", []) or []:
+                        try:
+                            await self.exec_command(session_id, exec_dir=None, command=f"kill {pid} || true")
+                        except Exception:
+                            logger.debug(f"Failed to kill pid {pid} for session {session_id}")
+                    # Remove session directory
+                    if getattr(self, "_session_root", None):
+                        await self.exec_command(session_id, exec_dir=None, command=f"rm -rf {self._session_root}")
+                except Exception as e:
+                    logger.warning(f"Failed to cleanup session-specific resources for {session_id}: {e}")
+
+            # Close HTTP client
             if self.client:
                 await self.client.aclose()
+
+            # If this was a dedicated container, remove it
             if self.container_name:
                 docker_client = docker.from_env()
                 docker_client.containers.get(self.container_name).remove(force=True)
@@ -621,6 +644,53 @@ class DockerSandbox(Sandbox):
                     command=f"mkdir -p {instance._session_root}/upload && mkdir -p {instance._session_root}/workspace",
                 )
 
+                # Compute deterministic ports based on session id to minimize collisions
+                offset = int(session_id[:8], 16) % 1000
+                vnc_port = 5902 + offset  # VNC TCP port for this session
+                ws_port = vnc_port + 1000  # WebSocket port for websockify
+                display_num = 10 + (offset % 200)
+
+                # Start Xvfb, x11vnc and websockify for this session if not already running
+                # Each command will print a PID when starting a background process
+                cmds = [
+                    # Start Xvfb on a dedicated display
+                    f"if ! pgrep -f 'Xvfb :{display_num}'; then nohup Xvfb :{display_num} -screen 0 1280x1024x24 >/dev/null 2>&1 & echo $!; else pgrep -f 'Xvfb :{display_num}' | head -n1; fi",
+                    # Start x11vnc bound to the display, listen on vnc_port
+                    f"if ! pgrep -f 'x11vnc -display :{display_num} -rfbport {vnc_port}'; then nohup x11vnc -display :{display_num} -nopw -rfbport {vnc_port} -shared -forever >/dev/null 2>&1 & echo $!; else pgrep -f 'x11vnc -display :{display_num} -rfbport {vnc_port}' | head -n1; fi",
+                    # Start websockify mapping ws_port -> vnc_port
+                    f"if ! pgrep -f 'websockify {ws_port} localhost:{vnc_port}'; then nohup websockify {ws_port} localhost:{vnc_port} --web none >/dev/null 2>&1 & echo $!; else pgrep -f 'websockify {ws_port} localhost:{vnc_port}' | head -n1; fi",
+                ]
+
+                pids = []
+                for cmd in cmds:
+                    resp = await instance.client.post(
+                        f"{instance.base_url}/api/v1/shell/exec",
+                        json={"id": session_id, "exec_dir": None, "command": cmd},
+                    )
+                    resp.raise_for_status()
+                    tr = ToolResult(**resp.json())
+                    if tr.success and tr.data and isinstance(tr.data, dict):
+                        out = tr.data.get("output") or ""
+                        out = out.strip()
+                        # Try to parse PID from output
+                        for line in out.splitlines()[::-1]:
+                            if line.isdigit():
+                                try:
+                                    pids.append(int(line))
+                                    break
+                                except Exception:
+                                    continue
+
+                # Store metadata on instance for cleanup
+                instance._vnc_port = vnc_port
+                instance._ws_port = ws_port
+                instance._display = display_num
+                instance._vnc_pids = pids
+
+                # Set per-session vnc url (ws)
+                instance._vnc_url = f"ws://{instance.ip}:{ws_port}"
+
+                # Ensure directories existed and processes started
                 return instance
             except Exception as e:
                 raise Exception(f"Failed to initialize shared sandbox session: {e}")
