@@ -11,7 +11,7 @@ class Settings(BaseSettings):
     # Model configuration
     model_name: str = "deepseek-chat"
     temperature: float = 0.7
-    max_tokens: int = 2000
+    max_tokens: int = 20000
     
     # MongoDB configuration
     mongodb_uri: str = "mongodb://mongodb:27017"
