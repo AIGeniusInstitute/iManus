@@ -657,57 +657,9 @@ class DockerSandbox(Sandbox):
                     f"if ! pgrep -f 'Xvfb :{display_num}'; then nohup Xvfb :{display_num} -screen 0 1280x1024x24 >/dev/null 2>&1 & echo $!; else pgrep -f 'Xvfb :{display_num}' | head -n1; fi",
                     # Start x11vnc bound to the display, listen on vnc_port
                     f"if ! pgrep -f 'x11vnc -display :{display_num} -rfbport {vnc_port}'; then nohup x11vnc -display :{display_num} -nopw -rfbport {vnc_port} -shared -forever >/dev/null 2>&1 & echo $!; else pgrep -f 'x11vnc -display :{display_num} -rfbport {vnc_port}' | head -n1; fi",
-                    # Start websockify mapping ws_port -> vnc_port and bind to all interfaces (0.0.0.0)
-                    f"if ! pgrep -f 'websockify 0.0.0.0:{ws_port} localhost:{vnc_port}'; then nohup websockify 0.0.0.0:{ws_port} localhost:{vnc_port} --web none >/dev/null 2>&1 & echo $!; else pgrep -f 'websockify 0.0.0.0:{ws_port} localhost:{vnc_port}' | head -n1; fi",
+                    # Start websockify mapping ws_port -> vnc_port
+                    f"if ! pgrep -f 'websockify {ws_port} localhost:{vnc_port}'; then nohup websockify {ws_port} localhost:{vnc_port} --web none >/dev/null 2>&1 & echo $!; else pgrep -f 'websockify {ws_port} localhost:{vnc_port}' | head -n1; fi",
                 ]
-
-                pids = []
-                for cmd in cmds:
-                    resp = await instance.client.post(
-                        f"{instance.base_url}/api/v1/shell/exec",
-                        json={"id": session_id, "exec_dir": None, "command": cmd},
-                    )
-                    resp.raise_for_status()
-                    tr = ToolResult(**resp.json())
-                    if tr.success and tr.data and isinstance(tr.data, dict):
-                        out = tr.data.get("output") or ""
-                        out = out.strip()
-                        # Try to parse PID from output
-                        for line in out.splitlines()[::-1]:
-                            if line.isdigit():
-                                try:
-                                    pids.append(int(line))
-                                    break
-                                except Exception:
-                                    continue
-
-                # Store metadata on instance for cleanup
-                instance._vnc_port = vnc_port
-                instance._ws_port = ws_port
-                instance._display = display_num
-                instance._vnc_pids = pids
-
-                # Set per-session vnc url (ws)
-                instance._vnc_url = f"ws://{instance.ip}:{ws_port}"
-
-                # Verify websockify is listening on the expected port from the host side
-                # This ensures the websocket will be reachable via the container IP (not only localhost)
-                import socket as _socket
-                reachable = False
-                for attempt in range(10):
-                    try:
-                        s = _socket.create_connection((instance.ip, ws_port), timeout=1)
-                        s.close()
-                        reachable = True
-                        break
-                    except Exception:
-                        await asyncio.sleep(0.5)
-
-                if not reachable:
-                    raise Exception(f"websockify failed to bind to port {ws_port}")
-
-                # Ensure directories existed and processes started
-                return instance
 
                 pids = []
                 for cmd in cmds:
