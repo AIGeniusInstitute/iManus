@@ -157,6 +157,17 @@ class DockerSandbox(Sandbox):
             container.reload()  # Refresh container info
             ip_address = DockerSandbox._get_container_ip(container)
 
+            # If the container has no IP assigned (user-defined network or different network mode),
+            # prefer the container name so Docker's internal DNS can resolve it from other containers.
+            # This avoids using stale or unreachable bridge IPs.
+            if not ip_address:
+                try:
+                    ip_address = container.name
+                except Exception:
+                    ip_address = container_name
+
+            logger.info(f"Created sandbox container {container_name} with ip/name {ip_address}")
+
             # Create and return DockerSandbox instance
             return DockerSandbox(ip=ip_address, container_name=container_name)
 
